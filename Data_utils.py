@@ -1,0 +1,105 @@
+import json
+import os
+import os.path as p
+import pickle
+
+import numpy as np
+import pandas
+from transformers import *
+from Utils import *
+
+
+def load_data(location):
+    with open(location, "rb") as file:
+        data = pickle.load(file)
+        return data
+
+
+def save_data(data, location):
+    with open(location, "wb") as file:
+        pickle.dump(data, file)
+
+
+def Tokenize_Input(first_sentence, second_sentence, tokenizer, model_type):
+    first_encoded = tokenizer.encode(str(first_sentence), add_special_tokens=False)
+    second_encoded = tokenizer.encode(str(second_sentence), add_special_tokens=False)
+
+    if model_type != "xlnet":
+        encoded = (
+            [tokenizer.cls_token_id]
+            + first_encoded
+            + [tokenizer.sep_token_id]
+            + second_encoded
+            + [tokenizer.sep_token_id]
+        )  # roberta
+    else:
+        encoded = (
+            first_encoded
+            + [tokenizer.sep_token_id]
+            + second_encoded
+            + [tokenizer.sep_token_id]
+            + [tokenizer.cls_token_id]
+        )
+
+    return encoded
+
+
+def get_attention_masks(X, tokenizer):
+    attention_masks = []
+
+    # For each sentence...
+    for sent in X:
+        # Create the attention mask.
+        #   - If a token ID is 0, then it's padding, set the mask to 0.
+        #   - If a token ID is > 0, then it's a real token, set the mask to 1.
+        att_mask = [int(token_id != tokenizer.pad_token_id) for token_id in sent]
+
+        # Store the attention mask for this sentence.
+        att_mask = np.asarray(att_mask)
+        attention_masks.append(att_mask)
+    attention_masks = np.asarray(attention_masks)
+    return attention_masks
+
+
+def pad_seq(seq, max_len, pad_idx):
+    if len(seq) > max_len:
+        sep = seq[-1]
+        seq = seq[0 : max_len - 1]
+        seq.append(sep)
+    while len(seq) != max_len:
+        seq.append(pad_idx)
+    return seq
+
+
+def create_data_for_transformers(
+    output_location, label_to_idx_dict, data_subset, tokenizer, suffix, model_type
+):
+    if p.exists(output_location) == False:
+        os.mkdir(output_location)
+
+    X = data_subset.apply(
+        lambda x: Tokenize_Input(x["sentence1"], x["sentence2"], tokenizer, model_type),
+        axis=1,
+    )
+    X = pandas.Series(X)
+
+    max_len = 0
+    for x in X:
+        if len(x) > max_len:
+            max_len = len(x)
+    print("actual", max_len)
+    if max_len > 300:
+        max_len = 300
+    print(max_len)
+
+    X = X.apply(pad_seq, max_len=max_len, pad_idx=tokenizer.pad_token_id)
+    X = np.array(X.values.tolist())
+    att_mask = get_attention_masks(X, tokenizer)
+
+    save_data(X, output_location + "X_" + suffix + ".pkl")
+    save_data(att_mask, output_location + "att_mask_" + suffix + ".pkl")
+
+    print(X.shape, att_mask.shape)
+
+    y = np.array(data_subset["label"].tolist())
+    save_data(y, output_location + "y_" + suffix + ".pkl")
