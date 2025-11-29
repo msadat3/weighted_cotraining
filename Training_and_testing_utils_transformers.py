@@ -99,7 +99,6 @@ def get_initial_weights(
     att_mask_val = torch.tensor(att_mask_valid, dtype=torch.long)
     y_val = torch.tensor(y_valid, dtype=torch.long)
 
-    # renamed from synthetic → autoLabeled
     x_auto = torch.tensor(X_autoLabeled, dtype=torch.long)
     att_mask_auto = torch.tensor(att_mask_autoLabeled, dtype=torch.long)
     y_auto = torch.tensor(y_autoLabeled, dtype=torch.long)
@@ -110,10 +109,8 @@ def get_initial_weights(
     val = TensorDataset(x_val, y_val, att_mask_val)
     validationLoader = DataLoader(val, batch_size=batch_size)
 
-    print(len(x_auto))
     autoDataset = TensorDataset(x_auto, y_auto, att_mask_auto)  # renamed
     autoLoader = DataLoader(autoDataset, batch_size=batch_size)
-    print(len(autoLoader))
 
     best_checkpoint_epoch = 0
 
