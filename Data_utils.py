@@ -6,7 +6,7 @@ import pickle
 import numpy as np
 import pandas
 from transformers import *
-from Utils import *
+
 
 
 def load_data(location):
@@ -87,10 +87,8 @@ def create_data_for_transformers(
     for x in X:
         if len(x) > max_len:
             max_len = len(x)
-    print("actual", max_len)
     if max_len > 300:
         max_len = 300
-    print(max_len)
 
     X = X.apply(pad_seq, max_len=max_len, pad_idx=tokenizer.pad_token_id)
     X = np.array(X.values.tolist())

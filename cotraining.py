@@ -14,7 +14,7 @@ from Training_and_testing_utils_transformers import *
 label_to_idx_dict = {
     "contrasting": 0,
     "reasoning": 1,
-    "entailing": 2,
+    "entailment": 2,
     "neutral": 3,
 }
 
@@ -227,10 +227,6 @@ def main():
     att_mask_valid = load_data(p.join(args.base, "att_mask_valid.pkl"))
     y_valid = np.asarray(load_data(p.join(args.base, "y_valid.pkl")))
 
-    print(
-        f"Data loaded - Valid shape: {X_valid.shape}, {y_valid.shape}, {att_mask_valid.shape}"
-    )
-
     # ----------------------------
     # Load auto-labeled data
     # ----------------------------
@@ -252,6 +248,10 @@ def main():
     X_autoLabeled = np.asarray(load_data(p.join(args.base, "X_autoLabeled.pkl")))
     att_mask_autoLabeled = load_data(p.join(args.base, "att_mask_autoLabeled.pkl"))
     y_autoLabeled = np.asarray(load_data(p.join(args.base, "y_autoLabeled.pkl")))
+
+    print(
+        "Data prepared and loaded"
+    )
 
     # ----------------------------
     # Compute initial weights
