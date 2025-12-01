@@ -7,6 +7,7 @@ import pandas
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import torch.nn.functional as F
 from Data_utils import *
 from sklearn.metrics import accuracy_score, classification_report, f1_score
 from torch.nn.modules.loss import _WeightedLoss
@@ -83,6 +84,12 @@ def get_initial_weights(
     """
     Compute initial weights for automatically labeled samples by training two models on human annotated data.
     """
+
+    if not p.exists(location_1):
+        os.mkdir(location_1)
+    if not p.exists(location_2):
+        os.mkdir(location_2)
+    
 
     train_probabilities_all_epochs_1 = [[] for _ in range(len(X_autoLabeled))]
     train_probabilities_all_epochs_2 = [[] for _ in range(len(X_autoLabeled))]
@@ -596,6 +603,11 @@ def finetune_on_human_labeled(
     lr=2e-5,
 ):
 
+    if not p.exists(location_1):
+        os.mkdir(location_1)
+    if not p.exists(location_2):
+        os.mkdir(location_2)
+        
     x_tr_1 = torch.tensor(X_train_1, dtype=torch.long)
     att_mask_tr_1 = torch.tensor(att_mask_train_1, dtype=torch.long)
     y_tr_1 = torch.tensor(y_train_1, dtype=torch.long)
@@ -772,7 +784,6 @@ def test_model_ensemble(
     device,
     batch_size,
     num_classes,
-    print_res,
     save_loc,
 ):
     if model_type == "Sci_BERT":
